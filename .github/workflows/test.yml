@@ -19,7 +19,6 @@ jobs:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
     runs-on: ${{ matrix.os }}
     
-    # Added services field to start marqo Docker container
     services:
       marqo:
         image: marqoai/marqo:latest
