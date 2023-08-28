@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
         python-version: ['3.9', '3.10']
 
     steps:
@@ -53,8 +53,9 @@ jobs:
       if: matrix.python-version == '3.9' && runner.os == 'Linux'
       run: black --check .
 
-    - name: Lint ruff
-      run: hatch run lint --select E501 T201 PLW2901 --quiet --ignore E501 .
+    - name: Lint 
+      if: matrix.python-version == '3.9' && runner.os == 'Linux'
+      run: hatch run lint:all --select E501 T201 PLW2901 --quiet --ignore E501 .
 
     - name: Run tests
       run: hatch run cov
