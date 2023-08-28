@@ -66,76 +66,13 @@ class MarqoDocumentStore:
 
         Returns the documents that match the filters provided.
 
-        Filters are defined as nested dictionaries. The keys of the dictionaries can be a logical operator (`"$and"`,
-        `"$or"`, `"$not"`), a comparison operator (`"$eq"`, `$ne`, `"$in"`, `$nin`, `"$gt"`, `"$gte"`, `"$lt"`,
-        `"$lte"`) or a metadata field name.
-
-        Logical operator keys take a dictionary of metadata field names and/or logical operators as value. Metadata
-        field names take a dictionary of comparison operators as value. Comparison operator keys take a single value or
-        (in case of `"$in"`) a list of values as value. If no logical operator is provided, `"$and"` is used as default
-        operation. If no comparison operator is provided, `"$eq"` (or `"$in"` if the comparison value is a list) is used
-        as default operation.
-
-        Example:
-
-        ```python
-        filters = {
-            "$and": {
-                "type": {"$eq": "article"},
-                "date": {"$gte": "2015-01-01", "$lt": "2021-01-01"},
-                "rating": {"$gte": 3},
-                "$or": {
-                    "genre": {"$in": ["economy", "politics"]},
-                    "publisher": {"$eq": "nytimes"}
-                }
-            }
-        }
-        # or simpler using default operators
-        filters = {
-            "type": "article",
-            "date": {"$gte": "2015-01-01", "$lt": "2021-01-01"},
-            "rating": {"$gte": 3},
-            "$or": {
-                "genre": ["economy", "politics"],
-                "publisher": "nytimes"
-            }
-        }
-        ```
-
-        To use the same logical operator multiple times on the same level, logical operators can take a list of
-        dictionaries as value.
-
-        Example:
-
-        ```python
-        filters = {
-            "$or": [
-                {
-                    "$and": {
-                        "Type": "News Paper",
-                        "Date": {
-                            "$lt": "2019-01-01"
-                        }
-                    }
-                },
-                {
-                    "$and": {
-                        "Type": "Blog Post",
-                        "Date": {
-                            "$gte": "2019-01-01"
-                        }
-                    }
-                }
-            ]
-        }
-        ```
-
         :param filters: the filters to apply to the document list.
         :return: a list of Documents that match the given filters.
         """
 
         if not isinstance(filters, dict) and filters is not None:
-            raise MarqoDocumentStoreFilterError("Filters must be a dictionary or None")
+            msg = "Filters must be a dictionary or None"
+            raise MarqoDocumentStoreFilterError(msg)
 
         filter_string = self._convert_filters(filters)
         results = self._index.search("", filter_string=filter_string, limit=10000)
@@ -157,7 +94,7 @@ class MarqoDocumentStore:
         if not isinstance(filter_value, str):
             return filter_value
 
-        if any([c in filter_value for c in special_chars]):
+        if any(c in filter_value for c in special_chars):
             for c in special_chars:
                 filter_value = filter_value.replace(c, f"\\{c}")
         return filter_value
@@ -223,33 +160,28 @@ class MarqoDocumentStore:
                     elif op == "$gt":
                         # marqo doesn't have an exclusing range so we use a magic number
                         if type(value) not in {int, float}:
-                            raise MarqoDocumentStoreFilterError(
-                                f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
-                            )
+                            msg = f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
+                            raise MarqoDocumentStoreFilterError(msg)
                         filt = f"{doc_key}:[{value + value*1e-16} TO *]"
                     elif op == "$gte":
                         if type(value) not in {int, float}:
-                            raise MarqoDocumentStoreFilterError(
-                                f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
-                            )
+                            msg = f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
+                            raise MarqoDocumentStoreFilterError(msg)
                         filt = f"{doc_key}:[{value} TO *]"
                     elif op == "$lt":
                         if type(value) not in {int, float}:
-                            raise MarqoDocumentStoreFilterError(
-                                f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
-                            )
+                            msg = f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
+                            raise MarqoDocumentStoreFilterError(msg)
                         # marqo doesn't have an exclusing range so we use a magic number
                         filt = f"{doc_key}:[* TO {value - value*1e-16}]"
                     elif op == "$lte":
                         if type(value) not in {int, float}:
-                            raise MarqoDocumentStoreFilterError(
-                                f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
-                            )
+                            msg = f"Filter value {value} of type {type(value)} is not supported for range filters, must be of type int or float"
+                            raise MarqoDocumentStoreFilterError(msg)
                         filt = f"{doc_key}:[* TO {value}]"
                     else:
-                        raise MarqoDocumentStoreFilterError(
-                            f"Operator {op} is not supported with MarqoDocumentStore or is not a valid operator"
-                        )
+                        msg = f"Operator {op} is not supported with MarqoDocumentStore or is not a valid operator"
+                        raise MarqoDocumentStoreFilterError(msg)
                     filter_statements.append(filt)
                     continue
             # if the child is a list then we apply the implict OR
@@ -269,7 +201,7 @@ class MarqoDocumentStore:
         """
         Returns documents with given ids.
         """
-        results = self._index.get_documents(document_ids=ids)['results']
+        results = self._index.get_documents(document_ids=ids)["results"]
         results = [r for r in results if r["_found"]]
         return self._get_result_to_documents(results)
 
@@ -284,12 +216,14 @@ class MarqoDocumentStore:
         """
 
         if not isinstance(documents, list):
-            raise ValueError("Documents must be a list")
+            msg = "Documents must be a list"
+            raise ValueError(msg)
 
         marqo_docs = []
         for d in documents:
             if not isinstance(d, Document):
-                raise ValueError("Documents must be of type Document")
+                msg = "Documents must be of type Document"
+                raise ValueError(msg)
             d = self._prepare_document(d)
             marqo_docs.append(d)
 
@@ -378,7 +312,7 @@ class MarqoDocumentStore:
                     metadata[new_k] = marqo_doc[k]
 
             content_type = marqo_doc["content_type"]
-            doc_content = marqo_doc.get('content')
+            doc_content = marqo_doc.get("content")
             content = None
             if content_type and doc_content:
                 content = self._content_from_text(content_type, doc_content)
@@ -404,6 +338,6 @@ class MarqoDocumentStore:
         retrievals = []
 
         for r in result:
-            converted_hits = self._get_result_to_documents(r['hits'])
+            converted_hits = self._get_result_to_documents(r["hits"])
             retrievals.append(converted_hits)
         return retrievals

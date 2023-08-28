@@ -3,6 +3,7 @@ from typing import List
 import pytest
 from haystack.preview import Document
 from haystack.preview.testing.document_store import DocumentStoreBaseTests
+
 from marqo_haystack.document_store import MarqoDocumentStore
 
 
@@ -64,7 +65,6 @@ class TestDocumentStore(DocumentStoreBaseTests):
         doc = Document(content="test doc")
         docstore.write_documents([doc])
         docstore.delete_documents([doc.id])
-        print(docstore.get_documents_by_id(ids=[doc.id]))
         assert len(docstore.get_documents_by_id(ids=[doc.id])) == 0
 
     @pytest.mark.unit

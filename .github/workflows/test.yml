@@ -1,5 +1,3 @@
-# This workflow comes from https://github.com/ofek/hatch-mypyc
-# https://github.com/ofek/hatch-mypyc/blob/5a198c0ba8660494d02716cfc9d79ce4adfb1442/.github/workflows/test.yml
 name: test
 
 on:
@@ -20,6 +18,13 @@ jobs:
   run:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
     runs-on: ${{ matrix.os }}
+    
+    # Added services field to start marqo Docker container
+    services:
+      marqo:
+        image: marqoai/marqo:latest
+        options: --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway
+    
     strategy:
       fail-fast: false
       matrix:
@@ -41,9 +46,15 @@ jobs:
     - name: Install Hatch
       run: pip install --upgrade hatch
 
-    - name: Lint
+    - name: Install Black
+      run: pip install --upgrade black
+
+    - name: Lint Black
       if: matrix.python-version == '3.9' && runner.os == 'Linux'
-      run: hatch run lint:all
+      run: black --check .
+
+    - name: Lint ruff
+      run: hatch run lint --select E501 T201 PLW2901 --quiet --ignore E501 .
 
     - name: Run tests
       run: hatch run cov

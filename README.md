@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/marqo-haystack.svg)](https://pypi.org/project/marqo-haystack)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/marqo-haystack.svg)](https://pypi.org/project/marqo-haystack)
-[![test](https://github.com/masci/marqo-haystack/actions/workflows/test.yml/badge.svg)](https://github.com/masci/marqo-haystack/actions/workflows/test.yml)
+[![test](https://github.com/marqo-ai/marqo-haystack/actions/workflows/test.yml/badge.svg)](https://github.com/marqo-ai/marqo-haystack/actions/workflows/test.yml)
 
 -----
 
