@@ -49,13 +49,9 @@ jobs:
     - name: Install Black
       run: pip install --upgrade black
 
-    - name: Lint Black
+    - name: Lint Ruff
       if: matrix.python-version == '3.9' && runner.os == 'Linux'
-      run: black --check .
-
-    - name: Lint 
-      if: matrix.python-version == '3.9' && runner.os == 'Linux'
-      run: hatch run lint:all --select E501 T201 PLW2901 --quiet --ignore E501 .
+      run: ruff --select E501 T201 PLW2901 --quiet --ignore E501 .
 
     - name: Run tests
       run: hatch run cov
