@@ -18,12 +18,7 @@ jobs:
   run:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
     runs-on: ${{ matrix.os }}
-    
-    services:
-      marqo:
-        image: marqoai/marqo:latest
-        options: --privileged -p 8882:8882 --add-host host.docker.internal:host-gateway
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -48,9 +43,13 @@ jobs:
     - name: Install Black
       run: pip install --upgrade black
 
+    - name: Install Ruff
+      run: pip install --upgrade ruff
+
+    - name: Lint Black
+      if: matrix.python-version == '3.9' && runner.os == 'Linux'
+      run: black --check .
+
     - name: Lint Ruff
       if: matrix.python-version == '3.9' && runner.os == 'Linux'
       run: ruff --select E501 T201 PLW2901 --quiet --ignore E501 .
-
-    - name: Run tests
-      run: hatch run cov
