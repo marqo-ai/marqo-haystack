@@ -19,6 +19,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         an instance of this document store so the base class can use it.
         """
         import marqo
+
         mq = marqo.Client()
         test_index = "test-haystack-document-store"
         mq.delete_index(test_index)
@@ -49,7 +50,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         """
         doc = Document(content="test doc")
         docstore.write_documents([doc])
-        
+
         gotten_docs = docstore.get_documents_by_id(ids=[doc.id])
         assert len(gotten_docs) == 1
 
@@ -84,30 +85,37 @@ class TestDocumentStore(DocumentStoreBaseTests):
     @pytest.mark.unit
     def test_eq_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_in_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_ne_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_nin_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_gt_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_gte_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_lt_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on embedding value is not supported.")
     @pytest.mark.unit
     def test_lte_filter_embedding(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
@@ -117,30 +125,37 @@ class TestDocumentStore(DocumentStoreBaseTests):
     @pytest.mark.unit
     def test_eq_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_in_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_ne_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_nin_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_gt_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_gte_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_lt_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Filter on table value is not supported.")
     @pytest.mark.unit
     def test_lte_filter_table(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
@@ -150,14 +165,17 @@ class TestDocumentStore(DocumentStoreBaseTests):
     @pytest.mark.unit
     def test_gt_filter_non_numeric(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Range query on non-numeric value is not supported.")
     @pytest.mark.unit
     def test_gte_filter_non_numeric(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Range query on non-numeric value is not supported.")
     @pytest.mark.unit
     def test_lt_filter_non_numeric(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
         pass
+
     @pytest.mark.skip(reason="Range query on non-numeric value is not supported.")
     @pytest.mark.unit
     def test_lte_filter_non_numeric(self, docstore: MarqoDocumentStore, filterable_docs: List[Document]):
