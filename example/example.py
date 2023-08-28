@@ -20,11 +20,12 @@ indexing = Pipeline()
 indexing.add_component("converter", TextFileToDocument())
 indexing.add_component("writer", DocumentWriter(document_store))
 indexing.connect("converter", "writer")
+print("Indexing data...")
 indexing.run({"converter": {"paths": file_paths}})
 
 querying = Pipeline()
 querying.add_component("retriever", MarqoDenseRetriever(document_store))
-results = querying.run({"retriever": {"queries": ["Variable declarations"], "top_k": 3}})
+results = querying.run({"retriever": {"queries": ["Is black and white text boring?"], "top_k": 3}})
 
 for d in results["retriever"][0]:
     print(d.metadata, d.score)
