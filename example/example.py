@@ -12,7 +12,8 @@ from marqo_haystack.retriever import MarqoDenseRetriever
 HERE = Path(__file__).resolve().parent
 file_paths = [HERE / "data" / Path(name) for name in os.listdir("data")]
 
-# Chroma is used in-memory so we use the same instances in the two pipelines below
+# Marqo requires the docker container to be running.
+# See here: https://docs.marqo.ai/latest/
 document_store = MarqoDocumentStore()
 
 indexing = Pipeline()
