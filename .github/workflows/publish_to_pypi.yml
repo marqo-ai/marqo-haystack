@@ -27,16 +27,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.8'
-        cache: "pip"
+    - name: Install Hatch
+      run: pip install hatch
 
     - name: Build package
-      run: python -m build
+      run: hatch build
 
     - name: Publish marqo-haystack
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_MARQO_HAYSTACK_TOKEN }}
+      env:
+        HATCH_INDEX_USER: __token__
+        HATCH_INDEX_AUTH: ${{ secrets.PYPI_MARQO_HAYSTACK_TOKEN }}
+      run: hatch publish -y
