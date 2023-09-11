@@ -41,4 +41,4 @@ class MarqoDenseRetriever:
         """
         if not top_k:
             top_k = self.top_k
-        return self.document_store.search(queries, top_k)
+        return {"documents": self.document_store.search(queries, top_k)}
