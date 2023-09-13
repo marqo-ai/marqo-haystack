@@ -1,14 +1,12 @@
 import logging
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import marqo
-import pandas as pd
-from haystack.preview.dataclasses import ContentType, Document
+from haystack.preview.dataclasses import Document
 from haystack.preview.document_stores.decorator import document_store
 from haystack.preview.document_stores.protocols import DuplicatePolicy
 
-from marqo_haystack.errors import MarqoDocumentStoreError, MarqoDocumentStoreFilterError
+from marqo_haystack.errors import MarqoDocumentStoreFilterError
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ class MarqoDocumentStore:
         Initializes the store.
         """
 
-        marqo.set_log_level("WARN")
+        # marqo.set_log_level("WARN")
 
         self._marqo_client = marqo.Client(url=url, api_key=api_key)
 
@@ -119,7 +117,7 @@ class MarqoDocumentStore:
                 filter_statements.append(f"({self._convert_filters(filters[k], k[1:].upper())})")
                 continue
 
-            if k in {"id", "content", "content_type", "metadata", "id_hash_keys", "score", "embedding"}:
+            if k in {"id", "text", "mime_type", "metadata", "id_hash_keys", "score", "embedding"}:
                 doc_key = k
             else:
                 doc_key = "__metadata_" + k
@@ -225,10 +223,18 @@ class MarqoDocumentStore:
                 msg = "Documents must be of type Document"
                 raise ValueError(msg)
             d = self._prepare_document(d)
+
+            if d["text"] is None:
+                logger.warn(
+                    f"Document {d['_id']} has no text, "
+                    "therefor Marqo has nothing to create an embedding for. This document will be skipped"
+                )
+                continue
+
             marqo_docs.append(d)
 
         self._index.add_documents(
-            documents=marqo_docs, client_batch_size=self.client_batch_size, tensor_fields=["content"]
+            documents=marqo_docs, client_batch_size=self.client_batch_size, tensor_fields=["text"]
         )
 
     def delete_documents(self, document_ids: List[str]) -> None:
@@ -251,32 +257,6 @@ class MarqoDocumentStore:
 
         return self._query_result_to_documents(results)
 
-    def _content_as_text(self, content_type: ContentType, content: Any) -> str:
-        if content_type == "text":
-            return content
-        if content_type == "table":
-            return content.to_json()
-        elif content_type == "audio":
-            return content.absolute()
-        elif content_type == "image":
-            return content.absolute()
-
-        msg = f"Unknown content_type: {content_type}"
-        raise MarqoDocumentStoreError(msg)
-
-    def _content_from_text(self, content_type: ContentType, content: str) -> Any:
-        if content_type == "text":
-            return content
-        elif content_type == "table":
-            return pd.read_json(content)
-        elif content_type == "audio":
-            return Path(content)
-        elif content_type == "image":
-            return Path(content)
-
-        msg = f"Unknown content_type: {content_type}"
-        raise MarqoDocumentStoreError(msg)
-
     def _prepare_document(self, d: Document) -> Dict[str, Any]:
         """
         Change the document in a way we can better store it into Marqo.
@@ -290,19 +270,18 @@ class MarqoDocumentStore:
         document = {
             "_id": d.id,
             "id": d.id,
-            "content": self._content_as_text(d.content_type, d.content),
-            "content_type": d.content_type,
+            "text": d.text,
+            "mime_type": d.mime_type,
         }
 
         document |= marqo_doc_meta
-
         return document
 
     def _get_result_to_documents(self, marqo_documents: List[Dict[str, Any]]) -> List[Document]:
         """
         Helper function to convert Marqo results into Haystack Documents
         """
-        retval = []
+        documents = []
         for marqo_doc in marqo_documents:
             # prepare metadata
             metadata: Dict[str, Any] = {}
@@ -311,25 +290,18 @@ class MarqoDocumentStore:
                     new_k = k.replace("__metadata_", "")
                     metadata[new_k] = marqo_doc[k]
 
-            content_type = marqo_doc["content_type"]
-            doc_content = marqo_doc.get("content")
-            content = None
-            if content_type and doc_content:
-                content = self._content_from_text(content_type, doc_content)
+            mime_type = marqo_doc.get("mime_type")
+            document = Document(
+                id=marqo_doc["_id"],
+                text=marqo_doc["text"],
+                metadata=metadata,
+                mime_type=mime_type,
+                score=marqo_doc.get("_score"),
+            )
 
-            document_dict = {
-                "id": marqo_doc["_id"],
-                "content": content,
-                "metadata": metadata,
-                "content_type": content_type,
-            }
+            documents.append(document)
 
-            if "_score" in marqo_doc:
-                document_dict["score"] = marqo_doc["_score"]
-
-            retval.append(Document.from_dict(document_dict))
-
-        return retval
+        return documents
 
     def _query_result_to_documents(self, result: Dict[str, Any]) -> List[List[Document]]:
         """

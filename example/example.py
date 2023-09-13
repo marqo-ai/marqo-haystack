@@ -14,10 +14,10 @@ file_paths = [HERE / "data" / Path(name) for name in os.listdir("data")]
 
 # Marqo requires the docker container to be running.
 # See here: https://docs.marqo.ai/latest/
-document_store = MarqoDocumentStore()
+document_store = MarqoDocumentStore(collection_name="test-haystack-document-store")
 
 indexing = Pipeline()
-indexing.add_component("converter", TextFileToDocument())
+indexing.add_component("converter", TextFileToDocument(id_hash_keys=["text"]))
 indexing.add_component("writer", DocumentWriter(document_store))
 indexing.connect("converter", "writer")
 print("Indexing data...")
@@ -27,5 +27,12 @@ querying = Pipeline()
 querying.add_component("retriever", MarqoDenseRetriever(document_store))
 results = querying.run({"retriever": {"queries": ["Is black and white text boring?"], "top_k": 3}})
 
-for d in results["retriever"][0]:
+for d in results["retriever"]['documents'][0]:
     print(d.metadata, d.score)
+
+
+# cleanup when done
+import marqo
+
+mq = marqo.Client()
+mq.delete_index("test-haystack-document-store")
