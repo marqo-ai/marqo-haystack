@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Optional
-
 from haystack.preview import Document, component
-
 from marqo_haystack import MarqoDocumentStore
 
 
@@ -39,6 +37,8 @@ class MarqoDenseRetriever:
 
         :raises ValueError: If the specified document store is not found or is not a MemoryDocumentStore instance.
         """
+
         if not top_k:
             top_k = self.top_k
+
         return {"documents": self.document_store.search(queries, top_k)}

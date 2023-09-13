@@ -1,4 +1,6 @@
 from typing import List
+from haystack.preview.dataclasses import Document
+from haystack.preview.document_stores import DocumentStore
 
 import pytest
 from haystack.preview import Document
@@ -38,7 +40,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         """
         Deleting a non-existing document should not raise with Marqo
         """
-        doc = Document(content="test doc")
+        doc = Document(text="test doc")
         docstore.write_documents([doc])
         docstore.delete_documents(["non_existing"])
         assert docstore.get_documents_by_id(ids=[doc.id])[0].id == doc.id
@@ -49,7 +51,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         """
         Deleting an existing document
         """
-        doc = Document(content="test doc")
+        doc = Document(text="test doc")
         docstore.write_documents([doc])
 
         gotten_docs = docstore.get_documents_by_id(ids=[doc.id])
@@ -62,7 +64,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         """
         Deleting an existing document
         """
-        doc = Document(content="test doc")
+        doc = Document(text="test doc")
         docstore.write_documents([doc])
         docstore.delete_documents([doc.id])
         assert len(docstore.get_documents_by_id(ids=[doc.id])) == 0
@@ -72,7 +74,7 @@ class TestDocumentStore(DocumentStoreBaseTests):
         """
         Searching documents
         """
-        doc = Document(id="mydoc", content="test1 test2")
+        doc = Document(id="mydoc", text="test1 test2")
         docstore.write_documents([doc])
 
         documents = docstore.search(queries=["test1", "test2"], top_k=10)
@@ -194,4 +196,14 @@ class TestDocumentStore(DocumentStoreBaseTests):
     @pytest.mark.skip(reason="Duplicate policy not supported.")
     @pytest.mark.unit
     def test_write_duplicate_overwrite(self, docstore: MarqoDocumentStore):
+        pass
+
+    @pytest.mark.skip(reason="Filter on array contents is not supported.")
+    @pytest.mark.unit
+    def test_filter_document_array(self, docstore: DocumentStore, filterable_docs: List[Document]):
+        pass
+
+    @pytest.mark.skip(reason="Filter on dataframe is not supported.")
+    @pytest.mark.unit
+    def test_filter_document_dataframe(self, docstore: DocumentStore, filterable_docs: List[Document]):
         pass
