@@ -81,11 +81,14 @@ from marqo_haystack import MarqoDocumentStore
 # Use an existing index (if my-index does exist)
 document_store = MarqoDocumentStore(collection_name="my-index")
 
-# Create a new index (called 'documents' by default)
+# Use an existing index (if my-new-index doesn't exist)
+document_store = MarqoDocumentStore(collection_name="my-new-index")
+
+# Use the default index name, 'documents'. One will be created if it doesn't exist.
 document_store = MarqoDocumentStore()
 ```
 
-You can also pass in settings for the index created by the API by passing a dictionary to the `settings_dict` parameter. For details on the settings object please [refer to the Marqo docs](https://docs.marqo.ai/latest/API-Reference/indexes/#body-parameters)
+You can also pass in settings for the index created by the API by passing a dictionary to the `settings_dict` parameter. For details on the settings object please [refer to the Marqo docs](https://docs.marqo.ai/latest/API-Reference/indexes/#body-parameters).
 
 In this example we specify that the index should use the `e5-large-v2` model and increase the `ef_construction` parameter to 512 for the HNSW graph construction.
 
@@ -111,6 +114,8 @@ document_store = MarqoDocumentStore(settings_dict=index_settings)
 This integration can also be used with Marqo Cloud. You can sign up or access you Marqo Cloud account [here](https://cloud.marqo.ai/).
 
 To use Marqo Cloud with this integration you will need to pass the `collection_name` (index name), `url` (`https://api.marqo.ai`), and `api_key` into the constructor.
+
+Note that when using this integration with Marqo Cloud you will need to have already created an index in your Marqo Cloud account.
 
 ```python
 from marqo_haystack import MarqoDocumentStore
