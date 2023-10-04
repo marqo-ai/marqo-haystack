@@ -6,7 +6,7 @@ from marqo_haystack import MarqoDocumentStore
 @component
 class MarqoRetriever:
     """
-    A component for retrieving documents from an MarqoDocumentStore.
+    A component for retrieving documents from an MarqoDocumentStore with multiple queries.
     """
 
     def __init__(self, document_store: MarqoDocumentStore, filters: Optional[Dict[str, Any]] = None, top_k: int = 10):
