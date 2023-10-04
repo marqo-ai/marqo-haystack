@@ -81,7 +81,7 @@ from marqo_haystack import MarqoDocumentStore
 # Use an existing index (if my-index does exist)
 document_store = MarqoDocumentStore(collection_name="my-index")
 
-# Use an existing index (if my-new-index doesn't exist)
+# Create a new index (if my-new-index doesn't exist)
 document_store = MarqoDocumentStore(collection_name="my-new-index")
 
 # Use the default index name, 'documents'. One will be created if it doesn't exist.
