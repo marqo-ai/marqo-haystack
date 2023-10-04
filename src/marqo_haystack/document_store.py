@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 @document_store
 class MarqoDocumentStore:
     """
-    We use the `collection.get` API to implement the document store protocol,
-    the `collection.search` API will be used in the retriever instead.
+    A MarqoDocumentStore document store for Haystack.
     """
 
     def __init__(
@@ -26,11 +25,18 @@ class MarqoDocumentStore:
         settings_dict: Optional[Dict[str, Any]] = None,
         client_batch_size: int = 4,
     ):
-        """
-        Initializes the store.
-        """
+        """Initialise the document store
 
-        # marqo.set_log_level("WARN")
+        Args:
+            collection_name (str, optional): The name of your collection, known as an 'index' in Marqo. Defaults to "documents".
+            url (_type_, optional): The URL for Marqo, if using the cloud then use https://api.marqo.ai. Defaults to "http://localhost:8882".
+            api_key (Optional[str], optional): Your Marqo Cloud API key (only required for cloud). Defaults to None.
+            settings_dict (Optional[Dict[str, Any]], optional): A settings dictionary for creation of the index if running Marqo locally. Defaults to None.
+            client_batch_size (int, optional): The client batch size for adding documents, set this higher (16-32) if using a GPU. Defaults to 4.
+
+        Raises:
+            ValueError: If collection_name is not an existing index and you are using Marqo cloud then an error will be raised.
+        """
 
         self._marqo_client = marqo.Client(url=url, api_key=api_key)
 
@@ -38,7 +44,12 @@ class MarqoDocumentStore:
 
         indexes = {idx.index_name for idx in self._marqo_client.get_indexes()["results"]}
         if self._collection not in indexes:
-            self._marqo_client.create_index(self._collection, settings_dict=settings_dict)
+            if not api_key:
+                self._marqo_client.create_index(self._collection, settings_dict=settings_dict)
+            else:
+                raise ValueError(
+                    "If using this integration with Marqo Cloud you must create your index ahead of time, specify your index name as the collection_name in the MarqoDocumentStore constructor."
+                )
         else:
             print(f"Index {self._collection} already exists, skipping index creation.")
 
@@ -54,18 +65,21 @@ class MarqoDocumentStore:
 
     def count_vectors(self) -> int:
         """
-        Returns how many documents are present in the document store.
+        Returns how many vectors are present in the document store.
         """
         return self._index.get_stats()["numberOfVectors"]
 
     def filter_documents(self, filters: Optional[Dict[str, Any]] = None) -> List[Document]:
-        """
-        Not recommended to use. At most 10000 documents are returned.
+        """Returns at most 10,000 documents that match the filter
 
-        Returns the documents that match the filters provided.
+        Args:
+            filters (Optional[Dict[str, Any]], optional): Filters to apply. Defaults to None.
 
-        :param filters: the filters to apply to the document list.
-        :return: a list of Documents that match the given filters.
+        Raises:
+            MarqoDocumentStoreFilterError: If the filter is invalid or not supported by this class.
+
+        Returns:
+            List[Document]: A list of matching documents.
         """
 
         if not isinstance(filters, dict) and filters is not None:
@@ -204,15 +218,15 @@ class MarqoDocumentStore:
         return self._get_result_to_documents(results)
 
     def write_documents(self, documents: List[Document], policy: DuplicatePolicy = DuplicatePolicy.FAIL) -> None:
-        """
-        Writes (or overwrites) documents into the store.
+        """Writes documents into the Marqo index.
 
-        :param documents: a list of documents.
-        :param policy: not supported at the moment
-        :raises DuplicateDocumentError: Exception trigger on duplicate document if `policy=DuplicatePolicy.FAIL`
-        :return: None
-        """
+        Args:
+            documents (List[Document]): A list of documents to add
+            policy (DuplicatePolicy, optional): Not used, ignore.
 
+        Raises:
+            ValueError: If the documents are not a list of the Document object.
+        """
         if not isinstance(documents, list):
             msg = "Documents must be a list"
             raise ValueError(msg)
@@ -238,21 +252,29 @@ class MarqoDocumentStore:
         )
 
     def delete_documents(self, document_ids: List[str]) -> None:
-        """
-        Deletes all documents with a matching document_ids from the document store.
-        Fails with `MissingDocumentError` if no document with this id is present in the store.
+        """Deletes documents from the index. If the document doesn't exist then it is ignored.
 
-        :param object_ids: the object_ids to delete
+        Args:
+            document_ids (List[str]): A list of document IDs to delete.
         """
         self._index.delete_documents(ids=document_ids)
 
-    def search(self, queries: List[Union[str, Dict[str, float]]], top_k: int) -> List[List[Document]]:
-        """
-        Perform vector search on the stored documents
+    def search(
+        self, queries: List[Union[str, Dict[str, float]]], top_k: int, filters: Optional[Dict[str, Any]] = None
+    ) -> List[List[Document]]:
+        """Perform a search for a list of queries.
+
+        Args:
+            queries (List[Union[str, Dict[str, float]]]): A list of queries.
+            top_k (int): The number of results to return.
+            filters (Optional[Dict[str, Any]], optional): Filters to apply during search. Defaults to None.
+
+        Returns:
+            List[List[Document]]: A list of matching documents for each query.
         """
         results = []
         for query in queries:
-            result = self._index.search(q=query, limit=top_k)
+            result = self._index.search(q=query, limit=top_k, filter_string=self._convert_filters(filters))
             results.append(result)
 
         return self._query_result_to_documents(results)
