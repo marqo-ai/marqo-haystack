@@ -7,7 +7,7 @@ from haystack.preview.components.file_converters import TextFileToDocument
 from haystack.preview.components.writers import DocumentWriter
 
 from marqo_haystack import MarqoDocumentStore
-from marqo_haystack.retriever import MarqoDenseRetriever
+from marqo_haystack.retriever import MarqoSingleRetriever
 
 HERE = Path(__file__).resolve().parent
 file_paths = [HERE / "data" / Path(name) for name in os.listdir("data")]
@@ -24,10 +24,10 @@ print("Indexing data...")
 indexing.run({"converter": {"paths": file_paths}})
 
 querying = Pipeline()
-querying.add_component("retriever", MarqoDenseRetriever(document_store))
-results = querying.run({"retriever": {"queries": ["Is black and white text boring?"], "top_k": 3}})
+querying.add_component("retriever", MarqoSingleRetriever(document_store))
+results = querying.run({"retriever": {"query": "Is black and white text boring?", "top_k": 3}})
 
-for d in results["retriever"]['documents'][0]:
+for d in results["retriever"]['documents']:
     print(d.metadata, d.score)
 
 
